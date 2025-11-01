@@ -1,0 +1,29 @@
+:80 {
+  encode zstd gzip
+
+  # API proxy
+  @api path /api/*
+  handle @api {
+    reverse_proxy backend:3000
+  }
+
+  # Static frontend (built by Vite copied to /srv)
+  handle {
+    root * /srv
+    try_files {path} /index.html
+    file_server
+  }
+
+  # Security and caching headers
+  header {
+    -Server
+  }
+
+  @index path /index.html
+  header @index Cache-Control "no-cache"
+
+  @assets {
+    path *.js *.css *.png *.jpg *.jpeg *.gif *.svg *.ico *.woff *.woff2 *.ttf
+  }
+  header @assets Cache-Control "public, max-age=31536000, immutable"
+}
