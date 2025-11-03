@@ -1,58 +1,69 @@
-version: "3.8"
-
 services:
-  # Production backend (TypeScript -> Node)
-  backend:
-    build:
-      context: ./backend
-      dockerfile: Dockerfile
-      target: prod
+  zookeeper:
+    image: confluentinc/cp-zookeeper:latest
+    container_name: zookeeper
     environment:
-      - NODE_ENV=production
-      - PORT=3000
-    expose:
-      - "3000"
-
-  # Production Caddy serving built frontend and proxying /api to backend
-  caddy:
-    build:
-      context: .
-      dockerfile: caddy/Dockerfile
+      ZOOKEEPER_CLIENT_PORT: 2181
     ports:
-      - "80:80"
-    depends_on:
-      - backend
+      - "2181:2181"
 
-  # Development profile (run with: docker compose --profile dev up --build)
-  frontend-dev:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm ci || npm install && npm run dev -- --host"
-    ports:
-      - "5173:5173"
-    volumes:
-      - ./:/app
-    profiles: ["dev"]
-
-  backend-dev:
-    image: node:20-alpine
-    working_dir: /app
-    command: sh -c "npm ci || npm install && npm run dev"
+  postgres:
+    image: postgres:latest
+    container_name: postgres
     environment:
-      - PORT=3000
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: mydb
     ports:
-      - "3000:3000"
+      - "5432:5432"
     volumes:
-      - ./backend:/app
-    profiles: ["dev"]
+      - postgres_data:/var/lib/postgresql
 
-  caddy-dev:
-    image: caddy:2.8-alpine
+  rabbitmq:
+    image: rabbitmq:3-management
+    container_name: rabbitmq
     ports:
-      - "80:80"
+      - "5672:5672"   # AMQP protocol port
+      - "15672:15672" # Management interface port
+    environment:
+      RABBITMQ_DEFAULT_USER: guest
+      RABBITMQ_DEFAULT_PASS: guest
+    healthcheck:
+      test: [ "CMD", "rabbitmqctl", "status" ]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  kafka:
+    image: confluentinc/cp-kafka:latest
+    container_name: kafka
+    ports:
+      - "9092:9092"
+    environment:
+      KAFKA_NODE_ID: 1
+      KAFKA_PROCESS_ROLES: broker,controller
+      KAFKA_LISTENERS: PLAINTEXT://0.0.0.0:9092,CONTROLLER://0.0.0.0:9093
+      KAFKA_ADVERTISED_LISTENERS: PLAINTEXT://localhost:9092
+      KAFKA_CONTROLLER_LISTENER_NAMES: CONTROLLER
+      KAFKA_LISTENER_SECURITY_PROTOCOL_MAP: CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT
+      KAFKA_CONTROLLER_QUORUM_VOTERS: 1@kafka:9093
+      KAFKA_OFFSETS_TOPIC_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_REPLICATION_FACTOR: 1
+      KAFKA_TRANSACTION_STATE_LOG_MIN_ISR: 1
+      KAFKA_LOG_DIRS: /var/lib/kafka/data  # Changed from /tmp/kraft-combined-logs
+      CLUSTER_ID: MkU3OEVBNTcwNTJENDM2Qk
+    user: root  # Run as root to avoid permission issues
     volumes:
-      - ./caddy/Caddyfile.dev:/etc/caddy/Caddyfile:ro
-    depends_on:
-      - frontend-dev
-      - backend-dev
-    profiles: ["dev"]
+      - kafka-data:/var/lib/kafka/data
+    command: >
+      bash -c "
+      chmod -R 777 /var/lib/kafka/data &&
+      /etc/confluent/docker/run
+      "
+
+volumes:
+  kafka-data:
+  postgres_data:
+
+
+

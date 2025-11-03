@@ -2,7 +2,13 @@
 
 async function fetchData() {
   try {
-    const response = await fetch(loadedUrl('/api/hello'));
+    const response = await fetch(loadedUrl('/api/kafka/message'), {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({ message: 'add this message to the queue' }),
+    });
     return await response.json();
   } catch (error) {
     console.error('Error fetching data:', error);
@@ -11,8 +17,7 @@ async function fetchData() {
 }
 
 const API_BASE_URL: string =
-  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
-  (import.meta.env.VITE_BASE_URL as string | undefined) ??
+  (import.meta.env.VITE_BACKEND_URL as string | undefined) ??
   window.location.origin;
 
 const loadedUrl = (path: string): string =>
