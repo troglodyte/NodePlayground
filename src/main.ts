@@ -1,4 +1,23 @@
 //TIP With Search Everywhere, you can find any action, file, or symbol in your project. Press <shortcut actionId="Shift"/> <shortcut actionId="Shift"/>, type in <b>terminal</b>, and press <shortcut actionId="EditorEnter"/>. Then run <shortcut raw="npm run dev"/> in the terminal and click the link in its output to open the app in the browser.
+
+async function fetchData() {
+  try {
+    const response = await fetch(loadedUrl('/api/hello'));
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return null;
+  }
+}
+
+const API_BASE_URL: string =
+  (import.meta.env.VITE_API_BASE_URL as string | undefined) ??
+  (import.meta.env.VITE_BASE_URL as string | undefined) ??
+  window.location.origin;
+
+const loadedUrl = (path: string): string =>
+  new URL(path, API_BASE_URL).toString();
+
 export function setupCounter(element: HTMLElement) {
   //TIP Try <shortcut actionId="GotoDeclaration"/> on <shortcut raw="counter"/> to see its usages. You can also use this shortcut to jump to a declaration – try it on <shortcut raw="counter"/> on line 13.
   let counter = 0;
@@ -15,13 +34,27 @@ export function setupCounter(element: HTMLElement) {
     const text = `${counter}`;
     element.innerHTML = text;
   };
+  
+  
 
   document.getElementById('increaseByOne')?.addEventListener('click', () => setCounter(counter + 1));
   document.getElementById('decreaseByOne')?.addEventListener('click', () => setCounter(counter - 1));
   document.getElementById('increaseByTwo')?.addEventListener('click', () => setCounter(counter + 2));
 
   //TIP In the app running in the browser, you’ll find that clicking <b>-2</b> doesn't work. To fix that, rewrite it using the code from lines 19 - 21 as examples of the logic.
-  document.getElementById('decreaseByTwo')
+  document
+    .getElementById('decreaseByTwo')
+    ?.addEventListener('click', () => setCounter(counter - 2));
+
+  document.getElementById('fetchData')?.addEventListener('click', async () => {
+    const data = await fetchData();
+    if (data) {
+      const outDiv = document.getElementById('dataResponse') ?? null;
+      if (outDiv) {
+        outDiv.innerHTML = data.message;
+      }
+    }
+  });
 
   //TIP Let’s see how to review and commit your changes. Press <shortcut actionId="GotoAction"/> and look for <b>commit</b>. Try checking the diff for a file – double-click main.ts to do that.
   setCounter(0);
