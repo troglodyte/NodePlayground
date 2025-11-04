@@ -8,9 +8,10 @@
     "dev": "tsx --watch src/server.ts"
   },
   "dependencies": {
+    "@types/express": "^5.0.5",
+    "dotenv": "^17.2.3",
     "express": "^5.1.0",
-    "kafkajs": "^2.2.4",
-    "@types/express": "^5.0.5"
+    "kafkajs": "^2.2.4"
   },
   "devDependencies": {
     "@types/node": "^20.11.30",

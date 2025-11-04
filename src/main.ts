@@ -1,6 +1,6 @@
 //TIP With Search Everywhere, you can find any action, file, or symbol in your project. Press <shortcut actionId="Shift"/> <shortcut actionId="Shift"/>, type in <b>terminal</b>, and press <shortcut actionId="EditorEnter"/>. Then run <shortcut raw="npm run dev"/> in the terminal and click the link in its output to open the app in the browser.
 
-async function fetchData() {
+async function sendItemToQueue() {
   try {
     const response = await fetch(loadedUrl('/api/kafka/message'), {
       method: 'POST',
@@ -8,6 +8,20 @@ async function fetchData() {
         'Content-Type': 'application/json',
       },
       body: JSON.stringify({ message: 'add this message to the queue' }),
+    });
+    return await response.json();
+  } catch (error) {
+    console.error('Error fetching data:', error);
+    return null;
+  }
+}
+async function fetchQueueCount() {
+  try {
+    const response = await fetch(loadedUrl('/api/kafka/count'), {
+      method: 'GET',
+      headers: {
+        'Content-Type': 'application/json',
+      },
     });
     return await response.json();
   } catch (error) {
@@ -52,14 +66,31 @@ export function setupCounter(element: HTMLElement) {
     ?.addEventListener('click', () => setCounter(counter - 2));
 
   document.getElementById('fetchData')?.addEventListener('click', async () => {
-    const data = await fetchData();
+    const data = await sendItemToQueue();
     if (data) {
       const outDiv = document.getElementById('dataResponse') ?? null;
       if (outDiv) {
         outDiv.innerHTML = data.message;
       }
+      updateQueueCount();
     }
   });
+
+  document.getElementById('fetchQueueCount')?.addEventListener('click', async() => {
+    updateQueueCount();
+  })
+
+  const updateQueueCount = async () => {
+    const data = await fetchQueueCount(); // todo add pass through topic
+    if (!data) throw new Error('Failed to fetch queue count');
+    if (data) {
+      const outDiv: HTMLElement | null =
+        document.getElementById('queueCountOut');
+      if (outDiv) {
+        outDiv.innerHTML = data.count.toString();
+      }
+    }
+  };
 
   //TIP Let’s see how to review and commit your changes. Press <shortcut actionId="GotoAction"/> and look for <b>commit</b>. Try checking the diff for a file – double-click main.ts to do that.
   setCounter(0);
