@@ -4,13 +4,11 @@ import { Kafka } from 'kafkajs';
 import { KafkaConfig } from './KafkaConfig';
 
 const kafka: Kafka = KafkaConfig.getInstance().getKafka();
-
 const producer = kafka.producer();
-
 const app = express();
 const port = Number(process.env.PORT ?? 3000);
-
 app.use(express.json()).use(cors())
+
 
 app.get('/health', (_req: Request, res: Response) => res.status(200).send('ok'));
 
@@ -53,4 +51,4 @@ app.listen(port, '0.0.0.0', () => {
   console.log(`Backend listening on ${port}`);
 });
 
-
+export default app;

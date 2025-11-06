@@ -76,9 +76,21 @@ services:
       /etc/confluent/docker/run
       "
 
+  ollama:
+    environment:
+      - OLLAMA_DEBUG=1
+    image: ollama/ollama:latest
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama:/root/.ollama
+    networks:
+      - application-net
+
 volumes:
   kafka-data:
   postgres_data:
+  ollama:
 
 networks:
   application-net:
