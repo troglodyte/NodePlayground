@@ -3,3 +3,18 @@ GET localhost:3000/health
 
 ### dummy endpoint
 GET localhost:3000/api/hello
+
+
+###
+# curl -X POST
+#-H "Content-Type: application/json"
+#--data '{ "query": "{ random }" }'
+#http://localhost:4000/graphql
+POST http://localhost:4000/graphql
+Content-Type: application/json
+
+{
+  "query": "{ random }"
+}
+
+###
