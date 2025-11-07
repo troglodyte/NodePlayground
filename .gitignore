@@ -24,3 +24,5 @@ dist-ssr
 *.sw?
 .env
 volume
+
+/src/generated/prisma
